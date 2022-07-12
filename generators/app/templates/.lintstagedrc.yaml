@@ -1,0 +1,4 @@
+"*.ts":
+  - tsc -p tsconfig.json --noEmit
+  - prettier --write
+  - eslint
