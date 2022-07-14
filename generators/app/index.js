@@ -29,6 +29,11 @@ module.exports = class extends Generator {
 
     return this.prompt(prompts).then((props) => {
       // To access props later use this.props.someAnswer;
+      const firstWord = props.lambdaName.split("-").shift();
+      const lower = firstWord.toLowerCase();
+
+      props.lower = lower;
+      props.templateName = firstWord.charAt(0).toUpperCase() + lower.slice(1);
       this.props = props;
     });
   }
@@ -47,8 +52,9 @@ module.exports = class extends Generator {
       ".lintstagedrc.yaml",
       ".prettierignore",
       ".prettierrc.yaml",
-      "esbuild.js",
+      "buildspec.yml",
       "jest.config.ts",
+      "rollup.config.js",
       "tsconfig.json",
     ].forEach((filename) => {
       self.fs.copy(self.templatePath(filename), self.destinationPath(filename));
@@ -62,18 +68,30 @@ module.exports = class extends Generator {
       this.templatePath("__test__/index.test.ts"),
       this.destinationPath("__test__/index.test.ts")
     );
+    this.fs.copyTpl(
+      this.templatePath("template.yaml"),
+      this.destinationPath("template.yaml"),
+      {
+        lambdaName: this.props.lambdaName,
+        templateName: this.props.templateName,
+        lower: this.props.lower,
+      }
+    );
   }
 
   install() {
     this.yarnInstall(
       [
+        "@rollup/plugin-commonjs",
+        "@rollup/plugin-json",
+        "@rollup/plugin-node-resolve",
+        "@rollup/plugin-typescript",
         "@types/aws-lambda",
         "@types/jest",
         "@types/node",
         "@typescript-eslint/eslint-plugin",
         "@typescript-eslint/parser",
         "cz-conventional-changelog",
-        "esbuild",
         "eslint",
         "eslint-config-prettier",
         "eslint-plugin-jest",
@@ -82,6 +100,9 @@ module.exports = class extends Generator {
         "jest",
         "lint-staged",
         "prettier",
+        "rollup",
+        "rollup-plugin-terser",
+        "rollup-plugin-zip",
         "typescript",
       ],
       { dev: true }
